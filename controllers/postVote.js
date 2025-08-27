@@ -1,0 +1,136 @@
+
+
+const Post = require('../models/post');
+const User = require('../models/user');
+const pointsCalculator = require('../utils/pointsCalculator');
+
+
+const upvotePost = async (req, res) => {
+  const { id } = req.params;
+
+  // Get post and authenticated user
+  const post = await Post.findById(id);
+  const user = await User.findById(req.user);
+
+  if (!post) {
+    return res.status(404).send({
+      message: `Post with ID: ${id} does not exist in database.`,
+    });
+  }
+
+  if (!user) {
+    return res
+      .status(404)
+      .send({ message: 'User does not exist in database.' });
+  }
+
+  
+  // Get post author for karma updates
+  const author = await User.findById(post.author);
+
+  if (!author) {
+    return res
+      .status(404)
+      .send({ message: 'Author user does not exist in database.' });
+  }
+
+  // Toggle upvote logic: Check if user already upvoted
+  if (post.upvotedBy.includes(user._id.toString())) {
+    // Remove upvote (revert to neutral)
+    post.upvotedBy = post.upvotedBy.filter(
+      (u) => u.toString() !== user._id.toString()
+    );
+
+    // Decrease author's post karma
+    author.karmaPoints.postKarma--;
+  } else {
+    // Add upvote and remove any existing downvote
+    post.upvotedBy = post.upvotedBy.concat(user._id);
+    post.downvotedBy = post.downvotedBy.filter(
+      (d) => d.toString() !== user._id.toString()
+    );
+
+    // Increase author's post karma
+    author.karmaPoints.postKarma++;
+  }
+
+  // Recalculate Reddit algorithm scores (hot/top sorting)
+  const calcluatedData = pointsCalculator(
+    post.upvotedBy.length,
+    post.downvotedBy.length,
+    post.createdAt
+  );
+
+  post.pointsCount = calcluatedData.pointsCount;
+  post.voteRatio = calcluatedData.voteRatio;
+  post.hotAlgo = calcluatedData.hotAlgo;
+  post.controversialAlgo = calcluatedData.controversialAlgo;
+
+  await post.save();
+  await author.save();
+
+  res.status(201).end(); // Vote successfully processed
+};
+
+
+const downvotePost = async (req, res) => {
+  const { id } = req.params;
+
+  // Get post and authenticated user
+  const post = await Post.findById(id);
+  const user = await User.findById(req.user);
+
+  if (!post) {
+    return res.status(404).send({
+      message: `Post with ID: ${id} does not exist in database.`,
+    });
+  }
+
+  if (!user) {
+    return res
+      .status(404)
+      .send({ message: 'User does not exist in database.' });
+  }
+
+  const author = await User.findById(post.author);
+
+  if (!author) {
+    return res
+      .status(404)
+      .send({ message: 'Author user does not exist in database.' });
+  }
+
+  if (post.downvotedBy.includes(user._id.toString())) {
+    post.downvotedBy = post.downvotedBy.filter(
+      (d) => d.toString() !== user._id.toString()
+    );
+
+    author.karmaPoints.postKarma++;
+  } else {
+    post.downvotedBy = post.downvotedBy.concat(user._id);
+    post.upvotedBy = post.upvotedBy.filter(
+      (u) => u.toString() !== user._id.toString()
+    );
+
+    author.karmaPoints.postKarma--;
+  }
+
+  const calcluatedData = pointsCalculator(
+    post.upvotedBy.length,
+    post.downvotedBy.length,
+    post.createdAt
+  );
+
+  post.pointsCount = calcluatedData.pointsCount;
+  post.voteRatio = calcluatedData.voteRatio;
+  post.hotAlgo = calcluatedData.hotAlgo;
+  post.controversialAlgo = calcluatedData.controversialAlgo;
+
+  await post.save();
+  await author.save();
+
+  res.status(201).end();
+};
+
+module.exports = { upvotePost, downvotePost };
+ 
