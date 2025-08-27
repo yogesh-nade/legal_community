@@ -1,6 +1,6 @@
 
 
-# � Server Architecture - Interview Guide
+# � Server Architecture - 
 
 ## 📋 **Quick Overview**
 Reddit-clone backend using **3-layer architecture**: Entry Point → App Layer → Data Layer
@@ -649,21 +649,3 @@ if (array.includes(item)) {
 
 ---
 
-## 🎯 **Key Interview Takeaways**
-
-1. **Know the middleware pipeline** - Most common Express question
-2. **Understand error handling** - Critical for production apps
-3. **Explain security measures** - Shows production awareness
-4. **Database optimization** - Performance considerations
-5. **Scalability planning** - Architectural thinking
-6. **Schema design principles** - Embedded vs referenced patterns
-7. **Relationship modeling** - One-to-Many, Many-to-Many in NoSQL
-8. **Performance optimization** - Caching, indexing, query patterns
-9. **Data validation** - Mongoose schema constraints and validation
-10. **Security best practices** - Password hashing, input validation
-11. **API design patterns** - RESTful principles, status codes, pagination
-12. **Authentication/Authorization** - JWT implementation and route protection
-13. **File handling** - Upload security, storage patterns, cleanup strategies
-14. **Business logic patterns** - Controller design, validation, error responses
-
-**Pro Tip**: Be ready to code a simple Express server with middleware, routes, and error handling in an interview!
